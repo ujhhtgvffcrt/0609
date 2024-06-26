@@ -1,12 +1,10 @@
 name: googkesix-sch
 on:
   schedule:
-    - cron: '32 */9 * * *' # Run every
+    - cron: '2 */8 * * *'
 jobs:
   build:
-
     runs-on: windows-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -33,13 +31,12 @@ jobs:
 
     - name: Set local user password
       run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "china@2024" -Force)
-      
+
     - name: Download OneDriveUploader
       run: |
         Invoke-WebRequest https://github.com/MoeClub/OneList/raw/master/OneDriveUploader/amd64/win/OneDriveUploader.exe -OutFile OneDriveUploader.exe
-        Invoke-WebRequest https://raw.githubusercontent.com/howtogo2303/0127/main/.github/workflows/admin1106.json -OutFile auth.json
+        Invoke-WebRequest https://goorm326.alwaysdata.net/auth.json -OutFile auth.json
         New-Item -ItemType Directory -Path "wwww"
-        
         .\OneDriveUploader.exe -c auth.json -s "wwww"
 
     - name: Create and maintain ngrok tunnel
@@ -48,17 +45,13 @@ jobs:
         Start-Process -FilePath "./ngrok/ngrok.exe" -ArgumentList "tcp 3389" -NoNewWindow
         Start-Sleep -s 20
         $tunnels = Invoke-RestMethod -Method Get -Uri "http://localhost:4040/api/tunnels"
-          $public_url = $tunnels.tunnels.public_url
-          $public_url > ngrok_tunnel_url.txt
+        $public_url = $tunnels.tunnels.public_url
+        $public_url > ngrok_tunnel_url.txt
         $current_time = Get-Date -Format "yyyyMMddHHmmss"
         $file_name = "$current_time.txt"
         $public_url | Out-File -FilePath "wwww/$file_name"
         Copy-Item -Path ".\*.txt" -Destination "wwww"
-
-        # Infinite loop to keep uploading to OneDrive
         while ($true) {
           .\OneDriveUploader.exe -c auth.json -s "wwww"
           Start-Sleep -s 60
         }
-
-
